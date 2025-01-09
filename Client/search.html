@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Search</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        font-family: Arial, sans-serif;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 50px auto;
+      }
+
+      .card {
+        margin-bottom: 20px;
+      }
+
+      .pagination {
+        margin-top: 20px;
+        justify-content: center;
+      }
+
+      .search-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      /* Logout button styling */
+      .logout {
+        padding: 7px 15px; /* Adjust padding for a better look */
+        background-color: #dc3545; /* Red background */
+        color: white; /* White text */
+        border: none; /* Remove border */
+        border-radius: 5px; /* Rounded corners */
+        font-size: 14px; /* Font size */
+        cursor: pointer; /* Pointer cursor on hover */
+        align-self: center;
+      }
+
+      .logout:hover {
+        background-color: #bd2130; /* Darker red on hover */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="text-center mb-4">
+        Search for Movies
+        <button class="logout" onclick="logoutUser()">Log Out</button>
+      </h1>
+
+      <div class="mb-3 search-bar">
+        <input
+          type="text"
+          id="movieSearch"
+          class="form-control"
+          placeholder="Type a movie name..."
+        />
+        <button
+          class="btn btn-primary"
+          id="favoritesButton"
+          onclick="goToFavorites()"
+        >
+          Favorites
+        </button>
+      </div>
+      <div class="mb-3">
+        <label for="moviesPerPageSelect" class="form-label"
+          >Movies Per Page:</label
+        >
+        <select id="moviesPerPageSelect" class="form-select">
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="30">30</option>
+        </select>
+      </div>
+
+      <div class="row" id="movieList"></div>
+      <nav>
+        <ul class="pagination" id="pagination"></ul>
+      </nav>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="search.js"></script>
+  </body>
+</html>

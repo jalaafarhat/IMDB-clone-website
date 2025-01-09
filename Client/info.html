@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Info</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      body {
+        background-color: #f8f9fa;
+        font-family: Arial, sans-serif;
+        margin: 10px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 50px auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      #backButton {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 10;
+      }
+
+      #moviePoster {
+        max-width: 100%;
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+
+      .btn {
+        margin-top: 10px;
+      }
+
+      iframe {
+        width: 100%;
+        height: 400px;
+        margin-top: 20px;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <button class="btn btn-secondary" id="backButton">Back to Search</button>
+
+      <img id="moviePoster" src="" alt="Movie Poster" />
+
+      <h1 id="movieTitle"></h1>
+      <p><strong>Release Date:</strong> <span id="movieRelease"></span></p>
+      <p><strong>Genre:</strong> <span id="movieGenre"></span></p>
+      <p><strong>Director:</strong> <span id="movieDirector"></span></p>
+      <p><strong>Actors:</strong> <span id="movieActors"></span></p>
+      <p><strong>Plot:</strong> <span id="moviePlot"></span></p>
+      <p><strong>Rating:</strong> <span id="movieRating"></span></p>
+      <div id="trailerSection" style="display: none">
+        <h3>Trailer</h3>
+        <iframe id="trailerFrame" frameborder="0" allowfullscreen></iframe>
+      </div>
+      <a href="#" id="imdbLink" target="_blank" class="btn btn-primary"
+        >View on IMDb</a
+      >
+      <button class="btn btn-success" id="favoriteButton">
+        Add to Favorites
+      </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="info.js"></script>
+  </body>
+</html>

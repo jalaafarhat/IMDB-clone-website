@@ -1,0 +1,3 @@
+1- when the register success then we go to  login page immediately
+
+2- when the login success we go to search page 
