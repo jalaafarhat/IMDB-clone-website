@@ -64,7 +64,6 @@ This project is a web-based application designed to mimic IMDb functionalities. 
    - Add the following variables:
      ```env
      PORT=3000
-     DB_URI=your_database_uri
      API_KEY=your_omdb_api_key
      ```
 
