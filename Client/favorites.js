@@ -10,7 +10,7 @@ function displayFavorites(sortBy = "title") {
     if (sortBy === "title") {
       return a.title.localeCompare(b.title);
     } else if (sortBy === "release") {
-      return new Date(a.releaseDate) - new Date(b.releaseDate);
+      return new Date(b.releaseDate) - new Date(a.releaseDate);
     } else if (sortBy === "rating") {
       return parseFloat(b.rating) - parseFloat(a.rating);
     }
