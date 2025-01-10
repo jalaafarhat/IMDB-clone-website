@@ -1,9 +1,5 @@
 // Get the current user from localStorage
 const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-if (!currentUser || !currentUser.email) {
-  alert("You must be logged in to view your favorites.");
-  window.location.href = "./login.html"; // Redirect to login if no user is logged in
-}
 
 // Fetch favorites for the current user
 document.addEventListener("DOMContentLoaded", () => {
