@@ -1,7 +1,34 @@
-let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+// Get the current user from localStorage
+const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+if (!currentUser || !currentUser.email) {
+  alert("You must be logged in to view your favorites.");
+  window.location.href = "./login.html"; // Redirect to login if no user is logged in
+}
 
-// Function to display the favorites list
-function displayFavorites(sortBy = "title") {
+// Fetch favorites for the current user
+document.addEventListener("DOMContentLoaded", () => {
+  fetchFavorites();
+});
+
+// Function to fetch favorites from the server
+function fetchFavorites(sortBy = "title") {
+  fetch(`/favorites?email=${encodeURIComponent(currentUser.email)}`)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        renderFavorites(data.favorites, sortBy);
+      } else {
+        alert(data.message);
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching favorites:", error);
+      alert("An error occurred while loading favorites.");
+    });
+}
+
+// Function to render favorites dynamically
+function renderFavorites(favorites, sortBy) {
   const favoritesList = document.getElementById("favoritesList");
   favoritesList.innerHTML = ""; // Clear the container
 
@@ -12,17 +39,23 @@ function displayFavorites(sortBy = "title") {
     } else if (sortBy === "release") {
       return new Date(b.releaseDate) - new Date(a.releaseDate);
     } else if (sortBy === "rating") {
-      return parseFloat(b.rating) - parseFloat(a.rating);
+      return parseFloat(b.rating || 0) - parseFloat(a.rating || 0);
     }
   });
 
+  // Check if there are no favorites
+  if (favorites.length === 0) {
+    favoritesList.innerHTML = `<p class="text-center text-muted">No favorites added yet.</p>`;
+    return;
+  }
+
   // Dynamically create movie cards
-  favorites.forEach((movie, index) => {
+  favorites.forEach((movie) => {
     const col = document.createElement("div");
     col.className = "col-md-4 movie-card";
 
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = "card shadow-sm";
 
     const img = document.createElement("img");
     img.className = "card-img-top";
@@ -39,16 +72,16 @@ function displayFavorites(sortBy = "title") {
 
     const releaseDate = document.createElement("p");
     releaseDate.className = "card-text";
-    releaseDate.textContent = `Release Date: ${movie.releaseDate}`;
+    releaseDate.textContent = `Release Date: ${movie.releaseDate || "N/A"}`;
 
     const rating = document.createElement("p");
     rating.className = "card-text";
-    rating.textContent = `Rating: ${movie.rating || "N/A"}`; // Handle missing ratings
+    rating.textContent = `Rating: ${movie.rating || "N/A"}`;
 
     const deleteButton = document.createElement("button");
-    deleteButton.className = "btn btn-danger";
-    deleteButton.textContent = "Delete";
-    deleteButton.addEventListener("click", () => confirmDelete(index));
+    deleteButton.className = "btn btn-danger w-100";
+    deleteButton.textContent = "Remove from Favorites";
+    deleteButton.addEventListener("click", () => confirmDelete(movie.imdbID));
 
     cardBody.appendChild(title);
     cardBody.appendChild(releaseDate);
@@ -62,8 +95,8 @@ function displayFavorites(sortBy = "title") {
   });
 }
 
-// Function to confirm deletion using SweetAlert
-function confirmDelete(index) {
+// Function to confirm deletion of a favorite movie
+function confirmDelete(imdbID) {
   Swal.fire({
     title: "Are you sure?",
     text: "Do you want to remove this movie from your favorites?",
@@ -73,22 +106,33 @@ function confirmDelete(index) {
     cancelButtonText: "Cancel",
   }).then((result) => {
     if (result.isConfirmed) {
-      favorites.splice(index, 1); // Remove the movie from the array
-      localStorage.setItem("favorites", JSON.stringify(favorites)); // Update localStorage
-      displayFavorites(); // Refresh the list
-      Swal.fire(
-        "Deleted!",
-        "The movie has been removed from your favorites.",
-        "success"
-      );
+      deleteFavorite(imdbID);
     }
   });
 }
 
+// Function to delete a favorite movie from the backend
+function deleteFavorite(imdbID) {
+  fetch("/favorites", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: currentUser.email, imdbID }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        fetchFavorites(); // Refresh the list after successful deletion
+      } else {
+        alert(data.message);
+      }
+    })
+    .catch((error) => {
+      console.error("Error removing favorite:", error);
+      alert("An error occurred. Please try again.");
+    });
+}
+
 // Event listener for the sort dropdown
 document.getElementById("sortOptions").addEventListener("change", (event) => {
-  displayFavorites(event.target.value); // Redisplay favorites with the selected sorting
+  fetchFavorites(event.target.value); // Refetch and redisplay favorites with sorting
 });
-
-// Initial display of favorites
-displayFavorites();

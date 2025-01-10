@@ -1,7 +1,13 @@
 const apiKey = "50ad6c97";
 const urlParams = new URLSearchParams(window.location.search);
 const movieId = urlParams.get("movieId");
-let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+// Retrieve the current user
+const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+if (!currentUser || !currentUser.email) {
+  alert("You must be logged in to access this page.");
+  window.location.href = "./login.html"; // Redirect to login if no user is logged in
+}
 
 document.getElementById("backButton").addEventListener("click", () => {
   window.location.href = "search.html";
@@ -14,6 +20,7 @@ async function fetchMovieDetails() {
     );
     const movie = response.data;
 
+    // Populate movie details
     document.getElementById("moviePoster").src =
       movie.Poster !== "N/A" ? movie.Poster : "https://via.placeholder.com/500";
     document.getElementById("movieTitle").textContent = movie.Title;
@@ -31,6 +38,7 @@ async function fetchMovieDetails() {
     updateFavoriteButton(movie);
   } catch (error) {
     console.error("Error fetching movie details:", error);
+    alert("Failed to load movie details. Please try again later.");
   }
 }
 
@@ -47,55 +55,78 @@ async function fetchTrailer(title) {
     document.getElementById("trailerSection").style.display = "block";
   } catch (error) {
     console.error("Error fetching trailer:", error);
+    document.getElementById("trailerSection").style.display = "none";
   }
 }
 
 function updateFavoriteButton(movie) {
   const favoriteButton = document.getElementById("favoriteButton");
-  const isFavorite = favorites.some((fav) => fav.imdbID === movie.imdbID);
 
-  favoriteButton.textContent = isFavorite
-    ? "Remove from Favorites"
-    : "Add to Favorites";
+  // Check if the movie is already in the user's favorites
+  axios
+    .get(`/favorites?email=${encodeURIComponent(currentUser.email)}`)
+    .then((response) => {
+      const favorites = response.data.favorites || [];
+      const isFavorite = favorites.some((fav) => fav.imdbID === movie.imdbID);
 
-  favoriteButton.addEventListener("click", () => {
-    if (isFavorite) {
-      Swal.fire({
-        title: "This movie is already in your favorites!",
-        text: "Do you want to remove it?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete it!",
-        cancelButtonText: "Cancel",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          favorites = favorites.filter((fav) => fav.imdbID !== movie.imdbID);
-          localStorage.setItem("favorites", JSON.stringify(favorites));
-          Swal.fire(
-            "Deleted!",
-            "The movie has been removed from your favorites.",
-            "success"
-          );
-          updateFavoriteButton(movie);
+      // Update button text based on favorite status
+      favoriteButton.textContent = isFavorite
+        ? "Remove from Favorites"
+        : "Add to Favorites";
+
+      // Add event listener to handle add/remove
+      favoriteButton.onclick = () => {
+        if (isFavorite) {
+          // Remove from favorites
+          axios
+            .delete("/favorites", {
+              data: { email: currentUser.email, imdbID: movie.imdbID },
+            })
+            .then(() => {
+              Swal.fire(
+                "Removed!",
+                "The movie has been removed from your favorites.",
+                "success"
+              );
+              updateFavoriteButton(movie); // Refresh button state
+            })
+            .catch((error) => {
+              console.error("Error removing favorite:", error);
+              alert("Failed to remove movie from favorites. Try again.");
+            });
+        } else {
+          // Add to favorites
+          axios
+            .post("/favorites", {
+              email: currentUser.email,
+              movie: {
+                imdbID: movie.imdbID,
+                title: movie.Title,
+                releaseDate: movie.Released,
+                poster: movie.Poster,
+                rating: movie.imdbRating,
+              },
+            })
+            .then(() => {
+              Swal.fire(
+                "Added!",
+                "The movie has been added to your favorites.",
+                "success"
+              );
+              updateFavoriteButton(movie); // Refresh button state
+            })
+            .catch((error) => {
+              console.error("Error adding favorite:", error);
+              alert("Failed to add movie to favorites. Try again.");
+            });
         }
-      });
-    } else {
-      favorites.push({
-        imdbID: movie.imdbID,
-        title: movie.Title,
-        releaseDate: movie.Released,
-        poster: movie.Poster,
-        rating: movie.imdbRating, // Add the rating field
-      });
-      localStorage.setItem("favorites", JSON.stringify(favorites));
-      Swal.fire(
-        "Added!",
-        "The movie has been added to your favorites.",
-        "success"
-      );
-      updateFavoriteButton(movie);
-    }
-  });
+      };
+    })
+    .catch((error) => {
+      console.error("Error fetching favorites:", error);
+      alert("Failed to check favorite status. Try again later.");
+    });
 }
 
+// Fetch movie details on page load
 fetchMovieDetails();

@@ -47,6 +47,9 @@ function goToFavorites() {
 }
 
 async function fetchMovies(query) {
+  // Clear search-related data
+  localStorage.removeItem("searchInput");
+  localStorage.removeItem("moviesPerPage");
   try {
     allMovies = []; // Reset the movies array
     currentPage = 1; // Reset to the first page
@@ -160,5 +163,13 @@ function displayMovies() {
 }
 
 function logoutUser() {
+  // Clear the current user's data from localStorage
+  localStorage.removeItem("currentUser");
+
+  // Clear search-related data
+  localStorage.removeItem("searchInput");
+  localStorage.removeItem("moviesPerPage");
+
+  // Redirect to the main page
   window.location.href = "./mainPage.html";
 }

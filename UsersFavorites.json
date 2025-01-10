@@ -1,1 +1,48 @@
-{}
+{
+  "jalaa.c.m@gmail.com": [
+    {
+      "imdbID": "tt1877830",
+      "title": "The Batman",
+      "releaseDate": "04 Mar 2022",
+      "poster": "https://m.media-amazon.com/images/M/MV5BMmU5NGJlMzAtMGNmOC00YjJjLTgyMzUtNjAyYmE4Njg5YWMyXkEyXkFqcGc@._V1_SX300.jpg",
+      "rating": "7.8"
+    },
+    {
+      "imdbID": "tt10872600",
+      "title": "Spider-Man: No Way Home",
+      "releaseDate": "17 Dec 2021",
+      "poster": "https://m.media-amazon.com/images/M/MV5BMmFiZGZjMmEtMTA0Ni00MzA2LTljMTYtZGI2MGJmZWYzZTQ2XkEyXkFqcGc@._V1_SX300.jpg",
+      "rating": "8.2"
+    },
+    {
+      "imdbID": "tt0944947",
+      "title": "Game of Thrones",
+      "releaseDate": "17 Apr 2011",
+      "poster": "https://m.media-amazon.com/images/M/MV5BMTNhMDJmNmYtNDQ5OS00ODdlLWE0ZDAtZTgyYTIwNDY3OTU3XkEyXkFqcGc@._V1_SX300.jpg",
+      "rating": "9.2"
+    },
+    {
+      "imdbID": "tt11198330",
+      "title": "House of the Dragon",
+      "releaseDate": "21 Aug 2022",
+      "poster": "https://m.media-amazon.com/images/M/MV5BM2QzMGVkNjUtN2Y4Yi00ODMwLTg3YzktYzUxYjJlNjFjNDY1XkEyXkFqcGc@._V1_SX300.jpg",
+      "rating": "8.3"
+    }
+  ],
+  "rayan@gmail.com": [
+    {
+      "imdbID": "tt0103776",
+      "title": "Batman Returns",
+      "releaseDate": "19 Jun 1992",
+      "poster": "https://m.media-amazon.com/images/M/MV5BZTliMDVkYTktZDdlMS00NTAwLWJhNzYtMWIwMDZjN2ViMGFiXkEyXkFqcGc@._V1_SX300.jpg",
+      "rating": "7.1"
+    },
+    {
+      "imdbID": "tt12885438",
+      "title": "The Lego Star Wars Holiday Special",
+      "releaseDate": "17 Nov 2020",
+      "poster": "https://m.media-amazon.com/images/M/MV5BYzQ2NTRhZGItN2MxMC00N2UzLTk2YTMtYWI5NmU4OTVkNTc2XkEyXkFqcGc@._V1_SX300.jpg",
+      "rating": "6.4"
+    }
+  ]
+}

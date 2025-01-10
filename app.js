@@ -11,6 +11,9 @@ app.use(express.static("Client"));
 // Middleware to parse JSON requests
 app.use(express.json());
 
+// Path to UserFavorites.json
+const favoritesFilePath = path.join(__dirname, "UsersFavorites.json");
+
 // Default route
 app.get("/", (req, res) => {
   res.redirect("/mainPage.html");
@@ -63,6 +66,123 @@ app.post("/login", (req, res) => {
   const user = users.find((u) => u.email === email);
   // Login successful
   res.json({ success: true, message: "Login successful!" });
+});
+
+app.get("/favorites", (req, res) => {
+  const email = req.query.email;
+
+  if (!email) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email is required" });
+  }
+
+  fs.readFile(favoritesFilePath, "utf-8", (err, data) => {
+    if (err) {
+      console.error("Error reading favorites file:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+
+    const favoritesData = JSON.parse(data || "{}");
+    const userFavorites = favoritesData[email] || []; // Return an empty list if no favorites exist
+
+    res.json({ success: true, favorites: userFavorites });
+  });
+});
+app.post("/favorites", (req, res) => {
+  const { email, movie } = req.body;
+
+  if (!email || !movie) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email and movie data are required" });
+  }
+
+  fs.readFile(favoritesFilePath, "utf-8", (err, data) => {
+    if (err) {
+      console.error("Error reading favorites file:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+
+    const favoritesData = JSON.parse(data || "{}");
+
+    if (!favoritesData[email]) {
+      favoritesData[email] = [];
+    }
+
+    // Check if the movie is already in the favorites
+    const isFavorite = favoritesData[email].some(
+      (fav) => fav.imdbID === movie.imdbID
+    );
+
+    if (isFavorite) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Movie is already in favorites" });
+    }
+
+    favoritesData[email].push(movie);
+
+    fs.writeFile(
+      favoritesFilePath,
+      JSON.stringify(favoritesData, null, 2),
+      (err) => {
+        if (err) {
+          console.error("Error writing to favorites file:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Server error" });
+        }
+
+        res.json({ success: true, message: "Movie added to favorites" });
+      }
+    );
+  });
+});
+
+app.delete("/favorites", (req, res) => {
+  const { email, imdbID } = req.body;
+
+  if (!email || !imdbID) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email and IMDb ID are required" });
+  }
+
+  fs.readFile(favoritesFilePath, "utf-8", (err, data) => {
+    if (err) {
+      console.error("Error reading favorites file:", err);
+      return res.status(500).json({ success: false, message: "Server error" });
+    }
+
+    const favoritesData = JSON.parse(data || "{}");
+
+    if (!favoritesData[email]) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User has no favorites" });
+    }
+
+    // Filter out the movie by IMDb ID
+    favoritesData[email] = favoritesData[email].filter(
+      (fav) => fav.imdbID !== imdbID
+    );
+
+    fs.writeFile(
+      favoritesFilePath,
+      JSON.stringify(favoritesData, null, 2),
+      (err) => {
+        if (err) {
+          console.error("Error writing to favorites file:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Server error" });
+        }
+
+        res.json({ success: true, message: "Movie removed from favorites" });
+      }
+    );
+  });
 });
 
 // Start the server

@@ -7,25 +7,18 @@ function loginUser() {
   const password = document
     .querySelector(".form-control[type='password']")
     .value.trim();
-  const errorMessage = document.querySelector(".error-message");
-
-  // Remove previous error message
-  if (errorMessage) {
-    errorMessage.remove();
-  }
 
   // Validate inputs
   if (!/^\S+@\S+\.\S+$/.test(email)) {
-    displayError("Invalid email address.");
+    alert("Invalid email address.");
     return;
   }
-
   if (password.length === 0) {
-    displayError("Password is required.");
+    alert("Password is required.");
     return;
   }
 
-  // Send data to the backend for verification
+  // Send login data to the backend
   fetch("/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -34,17 +27,18 @@ function loginUser() {
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
-        // Redirect to the search page
+        // Save the current user to localStorage
+        localStorage.setItem("currentUser", JSON.stringify({ email: email }));
         alert("Login successful!");
+        // Redirect to the search page
         window.location.href = "./search.html";
       } else {
-        // Display error message returned by the server
-        displayError(data.message);
+        alert(data.message); // Display the error message from the backend
       }
     })
     .catch((error) => {
-      console.error("Error:", error);
-      displayError("An error occurred. Please try again.");
+      console.error("Login error:", error);
+      alert("An error occurred during login. Please try again.");
     });
 }
 
