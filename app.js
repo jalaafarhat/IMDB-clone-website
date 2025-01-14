@@ -63,9 +63,15 @@ app.post("/login", (req, res) => {
   const users = JSON.parse(usersData);
 
   // Find the user by email
-  const user = users.find((u) => u.email === email);
+  const user = users.find((u) => u.email === email && u.password === password);
   // Login successful
-  res.json({ success: true, message: "Login successful!" });
+  if (user) {
+    res.json({ success: true });
+  } else {
+    res
+      .status(401)
+      .json({ success: false, message: "Invalid email or password" });
+  }
 });
 
 app.get("/favorites", (req, res) => {
