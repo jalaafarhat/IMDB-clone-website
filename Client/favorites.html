@@ -22,11 +22,28 @@
       .movie-card {
         margin-bottom: 15px;
       }
+      .btn {
+        padding: 7px 15px; /* Adjust padding for a better look */
+        background-color: rgb(4, 0, 255); /* blue background */
+        color: white; /* White text */
+        border: none; /* Remove border */
+        border-radius: 5px; /* Rounded corners */
+        font-size: 14px; /* Font size */
+        cursor: pointer; /* Pointer cursor on hover */
+        margin-bottom: 15px;
+      }
+      .btn:hover {
+        background-color: rgb(3, 0, 160); /* Darker blue on hover */
+        color: white; /* White text */
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <h1 class="mb-4">Favorites List</h1>
+      <button class="btn" id="searchButton" onclick="goToSearch()">
+        Return to search page
+      </button>
       <div class="mb-3">
         <label for="sortOptions" class="form-label">Sort By:</label>
         <select id="sortOptions" class="form-select">

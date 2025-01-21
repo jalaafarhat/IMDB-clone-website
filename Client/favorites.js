@@ -22,7 +22,9 @@ function fetchFavorites(sortBy = "title") {
       alert("An error occurred while loading favorites.");
     });
 }
-
+function goToSearch() {
+  window.location.href = "./search.html";
+}
 // Function to render favorites dynamically
 function renderFavorites(favorites, sortBy) {
   const favoritesList = document.getElementById("favoritesList");
