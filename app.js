@@ -1,18 +1,28 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const session = require("express-session");
 
 const app = express();
 const PORT = 3000;
 
-// Serve static files in the "Client" folder
+// Middleware
 app.use(express.static("Client"));
-
-// Middleware to parse JSON requests
 app.use(express.json());
+app.use(
+  session({
+    secret: "mySecretKey",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 
-// Path to UserFavorites.json
+const usersFilePath = path.join(__dirname, "users.json");
 const favoritesFilePath = path.join(__dirname, "UsersFavorites.json");
+
+// Helper functions
+const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
+const isValidPassword = (password) => password.length >= 6;
 
 // Default route
 app.get("/", (req, res) => {
@@ -22,173 +32,113 @@ app.get("/", (req, res) => {
 // Register route
 app.post("/register", (req, res) => {
   const { name, email, password } = req.body;
-
-  const usersFile = path.join(__dirname, "users.json");
-
-  // Read existing users
-  let users = [];
-  if (fs.existsSync(usersFile)) {
-    const usersData = fs.readFileSync(usersFile);
-    users = JSON.parse(usersData);
+  if (!name || !email || !password) {
+    return res
+      .status(400)
+      .json({ success: false, message: "All fields are required!" });
   }
-
-  // Check if email already exists
+  if (!isValidEmail(email)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid email format!" });
+  }
+  if (!isValidPassword(password)) {
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: "Password must be at least 6 characters!",
+      });
+  }
+  let users = fs.existsSync(usersFilePath)
+    ? JSON.parse(fs.readFileSync(usersFilePath))
+    : [];
   if (users.some((user) => user.email === email)) {
-    return res.status(400).json({
-      success: false,
-      message: "Email already registered.",
-    });
+    return res
+      .status(400)
+      .json({ success: false, message: "Email already registered!" });
   }
-
-  // Add new user
   users.push({ name, email, password });
-  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
-
+  fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2));
   res.json({ success: true, message: "Registration successful!" });
 });
 
 // Login route
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
-
-  const usersFile = path.join(__dirname, "users.json");
-
-  // Check if users.json exists
-  if (!fs.existsSync(usersFile)) {
-    return res.status(404).json({ success: false, message: "No users found." });
-  }
-
-  // Read users from the file
-  const usersData = fs.readFileSync(usersFile);
-  const users = JSON.parse(usersData);
-
-  // Find the user by email
+  let users = fs.existsSync(usersFilePath)
+    ? JSON.parse(fs.readFileSync(usersFilePath))
+    : [];
   const user = users.find((u) => u.email === email && u.password === password);
-  // Login successful
-  if (user) {
-    res.json({ success: true });
-  } else {
-    res
+  if (!user) {
+    return res
       .status(401)
       .json({ success: false, message: "Invalid email or password" });
   }
+  req.session.user = user;
+  res.json({ success: true, user: { name: user.name, email: user.email } });
 });
 
+// Logout route
+app.post("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.json({ success: true, message: "Logged out successfully" });
+  });
+});
+
+// Get user favorites
 app.get("/favorites", (req, res) => {
-  const email = req.query.email;
-
-  if (!email) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email is required" });
+  if (!req.session.user) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
   }
-
-  fs.readFile(favoritesFilePath, "utf-8", (err, data) => {
-    if (err) {
-      console.error("Error reading favorites file:", err);
-      return res.status(500).json({ success: false, message: "Server error" });
-    }
-
-    const favoritesData = JSON.parse(data || "{}");
-    const userFavorites = favoritesData[email] || []; // Return an empty list if no favorites exist
-
-    res.json({ success: true, favorites: userFavorites });
-  });
+  const email = req.session.user.email;
+  let favoritesData = fs.existsSync(favoritesFilePath)
+    ? JSON.parse(fs.readFileSync(favoritesFilePath))
+    : {};
+  res.json({ success: true, favorites: favoritesData[email] || [] });
 });
+
+// Add to favorites
 app.post("/favorites", (req, res) => {
-  const { email, movie } = req.body;
-
-  if (!email || !movie) {
+  if (!req.session.user) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+  const { movie } = req.body;
+  const email = req.session.user.email;
+  let favoritesData = fs.existsSync(favoritesFilePath)
+    ? JSON.parse(fs.readFileSync(favoritesFilePath))
+    : {};
+  favoritesData[email] = favoritesData[email] || [];
+  if (favoritesData[email].some((fav) => fav.imdbID === movie.imdbID)) {
     return res
       .status(400)
-      .json({ success: false, message: "Email and movie data are required" });
+      .json({ success: false, message: "Movie is already in favorites" });
   }
-
-  fs.readFile(favoritesFilePath, "utf-8", (err, data) => {
-    if (err) {
-      console.error("Error reading favorites file:", err);
-      return res.status(500).json({ success: false, message: "Server error" });
-    }
-
-    const favoritesData = JSON.parse(data || "{}");
-
-    if (!favoritesData[email]) {
-      favoritesData[email] = [];
-    }
-
-    // Check if the movie is already in the favorites
-    const isFavorite = favoritesData[email].some(
-      (fav) => fav.imdbID === movie.imdbID
-    );
-
-    if (isFavorite) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Movie is already in favorites" });
-    }
-
-    favoritesData[email].push(movie);
-
-    fs.writeFile(
-      favoritesFilePath,
-      JSON.stringify(favoritesData, null, 2),
-      (err) => {
-        if (err) {
-          console.error("Error writing to favorites file:", err);
-          return res
-            .status(500)
-            .json({ success: false, message: "Server error" });
-        }
-
-        res.json({ success: true, message: "Movie added to favorites" });
-      }
-    );
-  });
+  favoritesData[email].push(movie);
+  fs.writeFileSync(favoritesFilePath, JSON.stringify(favoritesData, null, 2));
+  res.json({ success: true, message: "Movie added to favorites" });
 });
 
+// Remove from favorites
 app.delete("/favorites", (req, res) => {
-  const { email, imdbID } = req.body;
-
-  if (!email || !imdbID) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email and IMDb ID are required" });
+  if (!req.session.user) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
   }
-
-  fs.readFile(favoritesFilePath, "utf-8", (err, data) => {
-    if (err) {
-      console.error("Error reading favorites file:", err);
-      return res.status(500).json({ success: false, message: "Server error" });
-    }
-
-    const favoritesData = JSON.parse(data || "{}");
-
-    if (!favoritesData[email]) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User has no favorites" });
-    }
-
-    // Filter out the movie by IMDb ID
-    favoritesData[email] = favoritesData[email].filter(
-      (fav) => fav.imdbID !== imdbID
-    );
-
-    fs.writeFile(
-      favoritesFilePath,
-      JSON.stringify(favoritesData, null, 2),
-      (err) => {
-        if (err) {
-          console.error("Error writing to favorites file:", err);
-          return res
-            .status(500)
-            .json({ success: false, message: "Server error" });
-        }
-
-        res.json({ success: true, message: "Movie removed from favorites" });
-      }
-    );
-  });
+  const { imdbID } = req.body;
+  const email = req.session.user.email;
+  let favoritesData = fs.existsSync(favoritesFilePath)
+    ? JSON.parse(fs.readFileSync(favoritesFilePath))
+    : {};
+  if (!favoritesData[email]) {
+    return res
+      .status(404)
+      .json({ success: false, message: "No favorites found" });
+  }
+  favoritesData[email] = favoritesData[email].filter(
+    (fav) => fav.imdbID !== imdbID
+  );
+  fs.writeFileSync(favoritesFilePath, JSON.stringify(favoritesData, null, 2));
+  res.json({ success: true, message: "Movie removed from favorites" });
 });
 
 // Start the server
