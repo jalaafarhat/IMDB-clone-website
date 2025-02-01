@@ -1,3 +1,5 @@
+require("dotenv").config(); // This loads the .env file
+
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
@@ -8,17 +10,14 @@ const bodyParser = require("body-parser");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SECRET_KEY = "your_secret_key"; // Change this to a strong secret
+const SECRET_KEY = process.env.SECRET_KEY; // Use the SECRET_KEY from the .env file
 
 // MongoDB Connection
 mongoose
-  .connect(
-    "mongodb+srv://jalaacm:IEO6gmVzjrny1AGJ@webdevcourse.l1sjb.mongodb.net/WebDevCourse",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     console.log("Connected to MongoDB");
   })
