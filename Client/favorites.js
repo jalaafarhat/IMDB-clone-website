@@ -1,14 +1,16 @@
 // Get the current user from localStorage
 const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
-// Fetch favorites for the current user
-document.addEventListener("DOMContentLoaded", () => {
-  fetchFavorites();
-});
 if (!currentUser || !currentUser.email) {
   alert("You must be logged in to access this page.");
   window.location.href = "./mainPage.html"; // Redirect to login if no user is logged in
 }
+
+// Fetch favorites when the page loads
+document.addEventListener("DOMContentLoaded", () => {
+  fetchFavorites();
+});
+
 // Function to fetch favorites from the server
 function fetchFavorites(sortBy = "title") {
   fetch(`/favorites?email=${encodeURIComponent(currentUser.email)}`)
@@ -25,22 +27,25 @@ function fetchFavorites(sortBy = "title") {
       alert("An error occurred while loading favorites.");
     });
 }
+
+// Function to navigate to search page
 function goToSearch() {
   window.location.href = "./search.html";
 }
+
 // Function to render favorites dynamically
 function renderFavorites(favorites, sortBy) {
   const favoritesList = document.getElementById("favoritesList");
   favoritesList.innerHTML = ""; // Clear the container
 
-  // Sort the favorites based on the selected criterion
+  // Sorting logic (adjust fields if necessary)
   favorites.sort((a, b) => {
     if (sortBy === "title") {
       return a.title.localeCompare(b.title);
     } else if (sortBy === "release") {
-      return new Date(b.releaseDate) - new Date(a.releaseDate);
+      return parseInt(b.year || "0") - parseInt(a.year || "0"); // Ensure proper year sorting
     } else if (sortBy === "rating") {
-      return parseFloat(b.rating || 0) - parseFloat(a.rating || 0);
+      return parseFloat(b.rating || "0") - parseFloat(a.rating || "0"); // Fix rating sorting
     }
   });
 
@@ -61,7 +66,7 @@ function renderFavorites(favorites, sortBy) {
     const img = document.createElement("img");
     img.className = "card-img-top";
     img.src =
-      movie.poster !== "N/A" ? movie.poster : "https://via.placeholder.com/150";
+      movie.poster !== "N/A" ? movie.poster : "https://via.placeholder.com/100";
     img.alt = movie.title;
 
     const cardBody = document.createElement("div");
@@ -73,11 +78,13 @@ function renderFavorites(favorites, sortBy) {
 
     const releaseDate = document.createElement("p");
     releaseDate.className = "card-text";
-    releaseDate.textContent = `Release Date: ${movie.releaseDate || "N/A"}`;
+    releaseDate.textContent = `Release Year: ${movie.year || "N/A"}`;
 
     const rating = document.createElement("p");
     rating.className = "card-text";
-    rating.textContent = `Rating: ${movie.rating || "N/A"}`;
+    rating.textContent = `Rating: ${
+      movie.rating && movie.rating !== "N/A" ? movie.rating : "Not Available"
+    }`;
 
     const deleteButton = document.createElement("button");
     deleteButton.className = "btn btn-danger w-100";
@@ -132,6 +139,8 @@ function deleteFavorite(imdbID) {
       alert("An error occurred. Please try again.");
     });
 }
+
+// Function to log out the user
 function logoutUser() {
   // Clear the current user's data from localStorage
   localStorage.removeItem("currentUser");
@@ -140,7 +149,7 @@ function logoutUser() {
   localStorage.removeItem("searchInput");
   localStorage.removeItem("moviesPerPage");
 
-  // Redirect to the main page    fetch("/logout", { method: "POST" })
+  // Send logout request to server
   fetch("/logout", { method: "POST" })
     .then(() => {
       window.location.href = "./mainPage.html"; // Redirect to home page after logout
