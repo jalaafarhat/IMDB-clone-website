@@ -37,12 +37,12 @@ const userSchema = new mongoose.Schema({
 });
 
 const favoriteSchema = new mongoose.Schema({
-  email: { type: String, unique: true }, // Email as a key for each user
+  email: { type: String, required: true },
   movies: [
     {
       imdbID: String,
       title: String,
-      year: String,
+      releaseDate: String,
       poster: String,
       rating: String,
     },
@@ -127,28 +127,15 @@ app.post("/logout", (req, res) => {
 
 // Get user favorites
 app.get("/favorites", async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ success: false, message: "Unauthorized" });
-  }
-
   try {
-    const userFavorites = await FavoriteMovies.findOne({
-      email: req.session.user.email,
-    });
-
-    // If the user has no favorites, return an empty array
-    const movies = userFavorites ? userFavorites.movies : [];
-
-    // Ensure every movie has `rating` and `releaseDate`
-    const updatedMovies = movies.map((movie) => ({
-      imdbID: movie.imdbID,
-      title: movie.title || "Unknown Title",
-      poster: movie.poster || "https://via.placeholder.com/150",
-      rating: movie.rating || "N/A", // Fix missing rating
-      year: movie.year || "N/A", // Fix missing release date
-    }));
-
-    res.json({ success: true, favorites: updatedMovies });
+    const { email } = req.query;
+    if (!email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email is required" });
+    }
+    const userFavorites = await FavoriteMovies.findOne({ email });
+    res.json({ success: true, favorites: userFavorites?.movies || [] });
   } catch (error) {
     console.error("Error fetching favorites:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -157,37 +144,19 @@ app.get("/favorites", async (req, res) => {
 
 // Add to favorites
 app.post("/favorites", async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ success: false, message: "Unauthorized" });
-  }
-
-  const { movie } = req.body;
-  const email = req.session.user.email;
-
-  // Ensure all movie fields exist
-  const movieToSave = {
-    imdbID: movie.imdbID,
-    title: movie.title || "Unknown Title",
-    poster: movie.poster || "https://via.placeholder.com/150",
-    rating: movie.rating || "N/A", // Add default rating
-    year: movie.year || "N/A", // Add default release date
-  };
-
   try {
-    let userFavorites = await FavoriteMovies.findOne({ email });
-
-    if (!userFavorites) {
-      userFavorites = new FavoriteMovies({ email, movies: [] });
-    }
-
-    if (userFavorites.movies.some((fav) => fav.imdbID === movie.imdbID)) {
+    const { email, movie } = req.body;
+    if (!email || !movie) {
       return res
         .status(400)
-        .json({ success: false, message: "Movie is already in favorites" });
+        .json({ success: false, message: "Invalid request" });
     }
 
-    userFavorites.movies.push(movieToSave);
-    await userFavorites.save();
+    await FavoriteMovies.findOneAndUpdate(
+      { email },
+      { $push: { movies: movie } },
+      { upsert: true, new: true }
+    );
 
     res.json({ success: true, message: "Movie added to favorites" });
   } catch (error) {

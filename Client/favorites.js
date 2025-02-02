@@ -43,7 +43,9 @@ function renderFavorites(favorites, sortBy) {
     if (sortBy === "title") {
       return a.title.localeCompare(b.title);
     } else if (sortBy === "release") {
-      return parseInt(b.year || "0") - parseInt(a.year || "0"); // Ensure proper year sorting
+      // Extract year from releaseDate (assuming format "15 Dec 2000")
+      const getYear = (dateStr) => parseInt((dateStr || "").split(" ")[2]) || 0;
+      return getYear(b.releaseDate) - getYear(a.releaseDate);
     } else if (sortBy === "rating") {
       return parseFloat(b.rating || "0") - parseFloat(a.rating || "0"); // Fix rating sorting
     }
@@ -78,8 +80,7 @@ function renderFavorites(favorites, sortBy) {
 
     const releaseDate = document.createElement("p");
     releaseDate.className = "card-text";
-    releaseDate.textContent = `Release Year: ${movie.year || "N/A"}`;
-
+    releaseDate.textContent = `Release Date: ${movie.releaseDate || "N/A"}`;
     const rating = document.createElement("p");
     rating.className = "card-text";
     rating.textContent = `Rating: ${
