@@ -43,7 +43,7 @@ function renderFavorites(favorites, sortBy) {
     if (sortBy === "title") {
       return a.title.localeCompare(b.title);
     } else if (sortBy === "release") {
-      // Extract year from releaseDate (assuming format "15 Dec 2000")
+      // Extract year from releaseDate
       const getYear = (dateStr) => parseInt((dateStr || "").split(" ")[2]) || 0;
       return getYear(b.releaseDate) - getYear(a.releaseDate);
     } else if (sortBy === "rating") {
