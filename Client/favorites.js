@@ -5,7 +5,10 @@ const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 document.addEventListener("DOMContentLoaded", () => {
   fetchFavorites();
 });
-
+if (!currentUser || !currentUser.email) {
+  alert("You must be logged in to access this page.");
+  window.location.href = "./mainPage.html"; // Redirect to login if no user is logged in
+}
 // Function to fetch favorites from the server
 function fetchFavorites(sortBy = "title") {
   fetch(`/favorites?email=${encodeURIComponent(currentUser.email)}`)
@@ -128,6 +131,21 @@ function deleteFavorite(imdbID) {
       console.error("Error removing favorite:", error);
       alert("An error occurred. Please try again.");
     });
+}
+function logoutUser() {
+  // Clear the current user's data from localStorage
+  localStorage.removeItem("currentUser");
+
+  // Clear search-related data
+  localStorage.removeItem("searchInput");
+  localStorage.removeItem("moviesPerPage");
+
+  // Redirect to the main page    fetch("/logout", { method: "POST" })
+  fetch("/logout", { method: "POST" })
+    .then(() => {
+      window.location.href = "./mainPage.html"; // Redirect to home page after logout
+    })
+    .catch((error) => console.error("Logout failed:", error));
 }
 
 // Event listener for the sort dropdown

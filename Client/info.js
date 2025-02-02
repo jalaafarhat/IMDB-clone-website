@@ -6,11 +6,11 @@ const movieId = urlParams.get("movieId");
 const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 if (!currentUser || !currentUser.email) {
   alert("You must be logged in to access this page.");
-  window.location.href = "./login.html"; // Redirect to login if no user is logged in
+  window.location.href = "./mainPage.html"; // Redirect to login if no user is logged in
 }
 
 document.getElementById("backButton").addEventListener("click", () => {
-  window.location.href = "search.html";
+  window.location.href = "./search.html";
 });
 
 async function fetchMovieDetails() {
@@ -126,6 +126,21 @@ function updateFavoriteButton(movie) {
       console.error("Error fetching favorites:", error);
       alert("Failed to check favorite status. Try again later.");
     });
+}
+function logoutUser() {
+  // Clear the current user's data from localStorage
+  localStorage.removeItem("currentUser");
+
+  // Clear search-related data
+  localStorage.removeItem("searchInput");
+  localStorage.removeItem("moviesPerPage");
+
+  // Redirect to the main page    fetch("/logout", { method: "POST" })
+  fetch("/logout", { method: "POST" })
+    .then(() => {
+      window.location.href = "./mainPage.html"; // Redirect to home page after logout
+    })
+    .catch((error) => console.error("Logout failed:", error));
 }
 
 // Fetch movie details on page load

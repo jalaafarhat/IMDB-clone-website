@@ -2,6 +2,11 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const session = require("express-session");
+require("dotenv").config();
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const bodyParser = require("body-parser");
 
 const app = express();
 const PORT = 3000;
@@ -43,12 +48,10 @@ app.post("/register", (req, res) => {
       .json({ success: false, message: "Invalid email format!" });
   }
   if (!isValidPassword(password)) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message: "Password must be at least 6 characters!",
-      });
+    return res.status(400).json({
+      success: false,
+      message: "Password must be at least 6 characters!",
+    });
   }
   let users = fs.existsSync(usersFilePath)
     ? JSON.parse(fs.readFileSync(usersFilePath))
@@ -82,7 +85,7 @@ app.post("/login", (req, res) => {
 // Logout route
 app.post("/logout", (req, res) => {
   req.session.destroy(() => {
-    res.json({ success: true, message: "Logged out successfully" });
+    res.redirect("/homePage.html");
   });
 });
 
@@ -140,8 +143,24 @@ app.delete("/favorites", (req, res) => {
   fs.writeFileSync(favoritesFilePath, JSON.stringify(favoritesData, null, 2));
   res.json({ success: true, message: "Movie removed from favorites" });
 });
+app.get("/check-session", (req, res) => {
+  if (req.session.user) {
+    res.json({ success: true, user: req.session.user });
+  } else {
+    res.json({ success: false });
+  }
+});
 
 // Start the server
+
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.log("MongoDB connection error:", err));
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

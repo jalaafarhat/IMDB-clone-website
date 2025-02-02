@@ -13,6 +13,11 @@ document
     displayMovies();
   });
 
+const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+if (!currentUser || !currentUser.email) {
+  alert("You must be logged in to access this page.");
+  window.location.href = "./mainPage.html"; // Redirect to login if no user is logged in
+}
 // Retrieve and apply the saved movies per page setting
 window.addEventListener("DOMContentLoaded", () => {
   const savedMoviesPerPage = localStorage.getItem("moviesPerPage");
@@ -170,6 +175,10 @@ function logoutUser() {
   localStorage.removeItem("searchInput");
   localStorage.removeItem("moviesPerPage");
 
-  // Redirect to the main page
-  window.location.href = "./mainPage.html";
+  // Redirect to the main page    fetch("/logout", { method: "POST" })
+  fetch("/logout", { method: "POST" })
+    .then(() => {
+      window.location.href = "./mainPage.html"; // Redirect to home page after logout
+    })
+    .catch((error) => console.error("Logout failed:", error));
 }

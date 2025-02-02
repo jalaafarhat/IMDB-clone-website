@@ -47,9 +47,27 @@
         margin-top: 20px;
         border-radius: 10px;
       }
+      #logout-btn {
+        padding: 7px 15px;
+        background-color: red; /* Red background */
+        color: white; /* White text */
+        border: none; /* Remove border */
+        border-radius: 5px; /* Rounded corners */
+        font-size: 14px;
+        cursor: pointer; /* Pointer cursor on hover */
+        margin-left: 10px; /* Space between greeting and button */
+      }
+
+      #logout-btn:hover {
+        background-color: darkred; /* Darker red on hover */
+      }
     </style>
   </head>
   <body>
+    <div id="user-info" style="position: absolute; top: 10px; right: 10px">
+      <span id="greeting"></span>
+      <button id="logout-btn" onclick="logoutUser()">Logout</button>
+    </div>
     <div class="container">
       <button class="btn btn-secondary" id="backButton">Back to Search</button>
 
@@ -76,5 +94,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="info.js"></script>
+    <script src="user.js"></script>
   </body>
 </html>
