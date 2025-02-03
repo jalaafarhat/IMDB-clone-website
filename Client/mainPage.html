@@ -10,20 +10,83 @@
     />
     <style>
       body {
-        background-color: #f8f9fa;
-        font-family: Arial, sans-serif;
+        background: linear-gradient(to right, #74ebd5, #acb6e5);
+        font-family: "Poppins", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
       }
+
       .container {
-        max-width: 600px;
-        margin: 50px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         text-align: center;
+        max-width: 500px;
+      }
+
+      h1 {
+        color: #333;
+        font-weight: 600;
+      }
+
+      p {
+        color: #555;
+        margin-bottom: 20px;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      li {
+        background: #f1f1f1;
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: bold;
+        color: #444;
+      }
+
+      .btn {
+        width: 120px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 8px;
+        padding: 10px;
+        transition: 0.3s;
+      }
+
+      .btn-success {
+        background-color: #28a745;
+        border: none;
+      }
+
+      .btn-success:hover {
+        background-color: #218838;
+      }
+
+      .btn-primary {
+        background-color: #007bff;
+        border: none;
+      }
+
+      .btn-primary:hover {
+        background-color: #0056b3;
       }
     </style>
   </head>
   <body>
     <div class="container">
       <h1>Main Entry Page</h1>
-      <p>Welcome! This page includes student names and their IDs.</p>
+      <p>
+        Welcome to our Final Project! <br />
+        This page includes student names and their IDs.
+      </p>
       <ul>
         <li>Student 1: ID12345</li>
         <li>Student 2: ID67890</li>
