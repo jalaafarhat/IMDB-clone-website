@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const session = require("express-session");
 const dotenv = require("dotenv");
+const path = require("path");
 
 dotenv.config();
 
@@ -10,7 +11,7 @@ const app = express();
 const PORT = 3000;
 
 // Middleware
-app.use(express.static("Client"));
+app.use(express.static(path.join(__dirname, "Client"))); // Serve static files from the "Client" folder
 app.use(express.json());
 app.use(
   session({
@@ -34,6 +35,15 @@ const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
+  links: [
+    {
+      movieId: String,
+      link: String,
+      name: String,
+      isPublic: Boolean,
+      addedAt: { type: Date, default: Date.now },
+    },
+  ],
 });
 
 const favoriteSchema = new mongoose.Schema({
@@ -49,8 +59,28 @@ const favoriteSchema = new mongoose.Schema({
   ],
 });
 
+const movieSchema = new mongoose.Schema({
+  imdbID: { type: String, unique: true, required: true },
+  title: { type: String, required: true },
+  releaseDate: String,
+  poster: String,
+  rating: String,
+  genre: String,
+  director: String,
+  actors: [String],
+  plot: String,
+  links: [
+    {
+      link: String,
+      isPublic: { type: Boolean, default: false },
+      addedBy: String,
+    },
+  ],
+});
+
 const User = mongoose.model("User", userSchema);
 const FavoriteMovies = mongoose.model("FavoriteMovies", favoriteSchema);
+const Movie = mongoose.model("Movie", movieSchema);
 
 // Helper functions
 const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
@@ -58,7 +88,7 @@ const isValidPassword = (password) => password.length >= 6;
 
 // Default route
 app.get("/", (req, res) => {
-  res.redirect("/mainPage.html");
+  res.sendFile(path.join(__dirname, "Client", "mainPage.html")); // Serve the main page
 });
 
 // Register route
@@ -200,6 +230,88 @@ app.get("/check-session", (req, res) => {
     res.json({ success: true, user: req.session.user });
   } else {
     res.json({ success: false });
+  }
+});
+
+// Get all movies
+app.get("/movies", async (req, res) => {
+  try {
+    const movies = await Movie.find();
+    res.json({ success: true, movies });
+  } catch (error) {
+    console.error("Error fetching movies:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Add new movie
+// Add or update movie
+app.post("/movies", async (req, res) => {
+  try {
+    const { imdbID } = req.body;
+
+    // Check if the movie already exists
+    const existingMovie = await Movie.findOne({ imdbID });
+
+    if (existingMovie) {
+      // If the movie exists, update it with the new data
+      await Movie.updateOne({ imdbID }, { $set: req.body });
+      return res.json({
+        success: true,
+        message: "Movie updated successfully!",
+      });
+    } else {
+      // If the movie doesn't exist, create a new one
+      const movie = new Movie(req.body);
+      await movie.save();
+      return res.json({ success: true, message: "Movie added successfully!" });
+    }
+  } catch (error) {
+    console.error("Error adding/updating movie:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Add link to a movie
+app.post("/movies/links", async (req, res) => {
+  try {
+    const { movieId, link, name, isPublic, addedBy } = req.body;
+
+    // Update movie links
+    const movie = await Movie.findOneAndUpdate(
+      { imdbID: movieId },
+      { $push: { links: { link, name, isPublic, addedBy } } },
+      { new: true, upsert: true }
+    );
+
+    // Update user's links
+    await User.findOneAndUpdate(
+      { email: addedBy },
+      { $push: { links: { movieId, link, name, isPublic } } },
+      { upsert: true }
+    );
+
+    res.json({ success: true, movie });
+  } catch (error) {
+    console.error("Error adding link:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Get user links
+// Get public links for a specific movie
+app.get("/movies/:movieId/public-links", async (req, res) => {
+  try {
+    const movie = await Movie.findOne({ imdbID: req.params.movieId });
+    if (!movie)
+      return res
+        .status(404)
+        .json({ success: false, message: "Movie not found" });
+
+    const publicLinks = movie.links.filter((link) => link.isPublic);
+    res.json({ success: true, links: publicLinks });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
