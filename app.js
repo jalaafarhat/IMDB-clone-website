@@ -461,6 +461,40 @@ app.delete("/movies/links/all", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+// Get user's links with movie data
+app.get("/users/:email/links", async (req, res) => {
+  try {
+    const movies = await Movie.find({ "links.addedBy": req.params.email });
+    const links = [];
+
+    movies.forEach((movie) => {
+      movie.links
+        .filter((link) => link.addedBy === req.params.email)
+        .forEach((link) => {
+          const reviews = link.reviews || [];
+          const avgRating =
+            reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length || 0;
+
+          links.push({
+            movieId: movie.imdbID,
+            movieTitle: movie.title,
+            moviePoster: movie.poster,
+            linkId: link._id,
+            linkName: link.name,
+            linkUrl: link.link,
+            isPublic: link.isPublic,
+            addedAt: link.addedAt,
+            avgRating: avgRating,
+            reviewCount: reviews.length,
+          });
+        });
+    });
+
+    res.json({ success: true, links });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

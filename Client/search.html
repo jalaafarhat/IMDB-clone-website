@@ -45,21 +45,6 @@
         background-color: #138496;
       }
 
-      /* Logout Button */
-      #logout-btn {
-        background-color: red;
-        border: none;
-        border-radius: 5px;
-        padding: 7px 15px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: 0.3s;
-      }
-
-      #logout-btn:hover {
-        background-color: darkred;
-      }
-
       /* Search Page Specific Styles */
       .search-bar {
         display: flex;
@@ -95,14 +80,6 @@
         margin-bottom: 15px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       }
-      #user-info {
-        position: absolute;
-        top: 10px;
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        padding: 0 20px;
-      }
 
       #favoritesButton,
       #searchButton {
@@ -125,13 +102,64 @@
           flex-direction: column;
         }
       }
+
+      /* User Info Section */
+      #user-info {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      #greeting {
+        margin-right: 10px;
+        font-size: 0.9em;
+      }
+
+      #linksButton {
+        background-color: #17a2b8;
+        border: none;
+        border-radius: 5px;
+        padding: 7px 15px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.3s;
+      }
+
+      #linksButton:hover {
+        background-color: #138496;
+      }
+
+      #logout-btn {
+        background-color: red;
+        border: none;
+        border-radius: 5px;
+        padding: 7px 15px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.3s;
+      }
+
+      #logout-btn:hover {
+        background-color: darkred;
+      }
     </style>
   </head>
   <body>
     <div id="user-info" style="position: absolute; top: 10px; right: 10px">
       <span id="greeting"></span>
+      <button
+        onclick="window.location.href='clientView.html'"
+        class="btn btn-info"
+        id="linksButton"
+      >
+        My Links
+      </button>
       <button id="logout-btn" onclick="logoutUser()">Logout</button>
     </div>
+
     <div class="container">
       <h1 class="text-center mb-4">Search for Movies</h1>
 
