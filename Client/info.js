@@ -14,6 +14,11 @@ if (!currentUser?.email) {
   alert("You must be logged in to access this page.");
   window.location.href = "./mainPage.html";
 }
+if (currentUser?.email) {
+  document.getElementById("greeting").textContent = `Welcome, ${
+    currentUser.name || currentUser.email
+  }`;
+}
 
 // Back button functionality
 document.getElementById("backButton").addEventListener("click", () => {
@@ -67,7 +72,7 @@ async function fetchMovieDetails() {
     updateFavoriteButton(movieData);
   } catch (error) {
     console.error("Error loading movie:", error);
-    swal.fire(error.message || "Failed to load movie details");
+    Swal.fire(error.message || "Failed to load movie details");
   }
 }
 
@@ -91,6 +96,8 @@ async function fetchMovieLinks(movieId) {
         addedBy: link.addedBy || "Anonymous",
         isPublic: link.isPublic,
       })) || [];
+
+    publicLinks.reverse();
 
     const totalPages = Math.ceil(publicLinks.length / linksPerPage);
     const startIndex = (currentLinksPage - 1) * linksPerPage;
