@@ -105,17 +105,29 @@
 
       /* User Info Section */
       #user-info {
-        position: absolute;
+        position: fixed;
         top: 10px;
-        right: 10px;
+        left: 0;
+        right: 0;
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 10px;
+        padding: 0 10px;
+        z-index: 1000;
+      }
+
+      #greeting-container {
+        margin-left: 10px;
       }
 
       #greeting {
-        margin-right: 10px;
-        font-size: 0.9em;
+        font-size: 14px;
+      }
+
+      #buttons-container {
+        margin-right: 20px;
+        display: flex;
+        gap: 10px;
       }
 
       #linksButton {
@@ -145,19 +157,42 @@
       #logout-btn:hover {
         background-color: darkred;
       }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        #user-info {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+
+        #greeting-container {
+          margin-left: 10px;
+        }
+
+        #buttons-container {
+          margin-right: 10px;
+          width: 100%;
+          justify-content: flex-end;
+        }
+      }
     </style>
   </head>
   <body>
-    <div id="user-info" style="position: absolute; top: 10px; right: 10px">
-      <span id="greeting"></span>
-      <button
-        onclick="window.location.href='clientView.html'"
-        class="btn btn-info"
-        id="linksButton"
-      >
-        My Links
-      </button>
-      <button id="logout-btn" onclick="logoutUser()">Logout</button>
+    <div id="user-info">
+      <div id="greeting-container">
+        <span id="greeting"></span>
+      </div>
+      <div id="buttons-container">
+        <button
+          onclick="window.location.href='clientView.html'"
+          class="btn btn-info me-2"
+          id="linksButton"
+        >
+          My Links
+        </button>
+        <button id="logout-btn" onclick="logoutUser()">Logout</button>
+      </div>
     </div>
 
     <div class="container">
