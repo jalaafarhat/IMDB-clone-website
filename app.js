@@ -76,6 +76,13 @@ const movieSchema = new mongoose.Schema({
       isPublic: { type: Boolean, default: false },
       addedBy: { type: String, required: true },
       addedAt: { type: Date, default: Date.now },
+      reviews: [
+        {
+          userEmail: { type: String, required: true },
+          rating: { type: Number, min: 1, max: 5, required: true },
+          createdAt: { type: Date, default: Date.now },
+        },
+      ],
     },
   ],
 });
@@ -314,7 +321,6 @@ app.post("/movies/links", async (req, res) => {
   }
 });
 
-// Get user links
 // Get public links for a specific movie
 app.get("/movies/:movieId/public-links", async (req, res) => {
   try {
@@ -327,6 +333,76 @@ app.get("/movies/:movieId/public-links", async (req, res) => {
     const publicLinks = movie.links.filter((link) => link.isPublic);
     res.json({ success: true, links: publicLinks });
   } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Fix Review Retrieval
+app.get("/movies/:movieId/links/:linkId/reviews", async (req, res) => {
+  try {
+    const movie = await Movie.findOne({ imdbID: req.params.movieId });
+    if (!movie) return res.status(404).json({ message: "Movie not found" });
+
+    const link = movie.links.id(req.params.linkId);
+    if (!link) return res.status(404).json({ message: "Link not found" });
+
+    res.json({ success: true, reviews: link.reviews });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+app.post("/movies/links/review", async (req, res) => {
+  try {
+    const { movieId, linkId, userEmail, rating } = req.body;
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid rating" });
+    }
+
+    const movie = await Movie.findOne({ imdbID: movieId });
+    if (!movie) return res.status(404).json({ message: "Movie not found" });
+
+    const link = movie.links.id(linkId);
+    if (!link) return res.status(404).json({ message: "Link not found" });
+
+    const existingReview = link.reviews.find((r) => r.userEmail === userEmail);
+
+    if (existingReview) {
+      existingReview.rating = rating;
+      existingReview.createdAt = new Date();
+    } else {
+      link.reviews.push({ userEmail, rating });
+    }
+
+    await movie.save();
+    res.json({
+      success: true,
+      message: existingReview ? "Review updated" : "Review added",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+app.delete("/movies/links/review", async (req, res) => {
+  try {
+    const { movieId, linkId, userEmail } = req.body;
+
+    const movie = await Movie.findOne({ imdbID: movieId });
+    if (!movie) return res.status(404).json({ message: "Movie not found" });
+
+    const link = movie.links.id(linkId);
+    if (!link) return res.status(404).json({ message: "Link not found" });
+
+    link.reviews = link.reviews.filter((r) => r.userEmail !== userEmail);
+
+    await movie.save();
+    res.json({ success: true, message: "Review deleted" });
+  } catch (error) {
+    console.error("Error deleting review:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });

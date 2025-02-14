@@ -14,11 +14,6 @@ if (!currentUser?.email) {
   alert("You must be logged in to access this page.");
   window.location.href = "./mainPage.html";
 }
-if (currentUser?.email) {
-  document.getElementById("greeting").textContent = `Welcome, ${
-    currentUser.name || currentUser.email
-  }`;
-}
 
 // Back button functionality
 document.getElementById("backButton").addEventListener("click", () => {
@@ -28,7 +23,6 @@ document.getElementById("backButton").addEventListener("click", () => {
 // Fetch and display movie details
 async function fetchMovieDetails() {
   try {
-    // First ensure movie exists in our database
     const omdbResponse = await axios.get(
       `https://www.omdbapi.com/?apikey=${apiKey}&i=${movieId}`
     );
@@ -72,7 +66,11 @@ async function fetchMovieDetails() {
     updateFavoriteButton(movieData);
   } catch (error) {
     console.error("Error loading movie:", error);
-    Swal.fire(error.message || "Failed to load movie details");
+    Swal.fire(
+      "Error",
+      error.message || "Failed to load movie details",
+      "error"
+    );
   }
 }
 
@@ -88,16 +86,16 @@ async function fetchMovieLinks(movieId) {
 
     linksList.innerHTML = "";
     pagination.innerHTML = "";
-    // Add null check and default values
+
     const publicLinks =
       data.links?.map((link) => ({
+        _id: link._id,
         name: link.name || "Unnamed Link",
         link: link.link || "#",
         addedBy: link.addedBy || "Anonymous",
         isPublic: link.isPublic,
+        reviews: link.reviews || [],
       })) || [];
-
-    publicLinks.reverse();
 
     const totalPages = Math.ceil(publicLinks.length / linksPerPage);
     const startIndex = (currentLinksPage - 1) * linksPerPage;
@@ -113,10 +111,28 @@ async function fetchMovieLinks(movieId) {
       listItem.innerHTML = `
         <div>
           <span class="me-3">${globalIndex}.</span>
-          <a href="${link.link}" target="_blank" class="text-info">${link.name}</a>
+          <a href="${link.link}" target="_blank" class="text-info">${
+        link.name
+      }</a>
           <small class="text-muted ms-2">(Added by ${link.addedBy})</small>
+          <span class="badge bg-primary ms-2">⭐ ${calculateAverageRating(
+            link.reviews
+          )}</span>
         </div>
-        <span class="badge bg-success">Public</span>
+        <div>
+          <span class="badge ${link.isPublic ? "bg-success" : "bg-warning"}">
+            ${link.isPublic ? "Public" : "Private"}
+          </span>
+          <button class="btn btn-sm btn-info ms-2" onclick="showReviewModal('${
+            link._id
+          }')">
+            ${
+              link.reviews?.some((r) => r.userEmail === currentUser.email)
+                ? "Update Review"
+                : "Review"
+            }
+          </button>
+        </div>
       `;
       linksList.appendChild(listItem);
     });
@@ -141,13 +157,86 @@ async function fetchMovieLinks(movieId) {
     }
   } catch (error) {
     console.error("Error fetching links:", error);
+    Swal.fire("Error", "Failed to load links", "error");
+  }
+}
+
+// Calculate average rating
+function calculateAverageRating(reviews) {
+  if (!reviews || reviews.length === 0) return "0.0";
+  const total = reviews.reduce((sum, review) => sum + review.rating, 0);
+  return (total / reviews.length).toFixed(1);
+}
+
+// Show review modal
+async function showReviewModal(linkId) {
+  try {
+    const { data } = await axios.get(
+      `/movies/${movieId}/links/${linkId}/reviews`
+    );
+    const userReview = data.reviews.find(
+      (r) => r.userEmail === currentUser.email
+    );
+
+    Swal.fire({
+      title: userReview ? "Update Review" : "Add Review",
+      html: `
+        <div class="mb-3">
+          <label class="form-label">Rating</label>
+          <select id="reviewRating" class="form-select">
+            ${[5, 4, 3, 2, 1]
+              .map(
+                (n) =>
+                  `<option value="${n}" ${
+                    userReview?.rating === n ? "selected" : ""
+                  }>${"⭐".repeat(n)}</option>`
+              )
+              .join("")}
+          </select>
+        </div>
+      `,
+      showCancelButton: true,
+      showDenyButton: !!userReview, // Show "Delete" button if the user already left a review
+      denyButtonText: "Delete Review",
+      confirmButtonText: userReview ? "Update Review" : "Submit Review",
+      preConfirm: async () => {
+        const rating = Number(document.getElementById("reviewRating").value);
+        if (!rating || rating < 1 || rating > 5) {
+          throw new Error("Please select a valid rating");
+        }
+        await axios.post("/movies/links/review", {
+          movieId,
+          linkId,
+          userEmail: currentUser.email,
+          rating,
+        });
+
+        return true;
+      },
+    }).then(async (result) => {
+      if (result.isDenied) {
+        await axios.delete(`/movies/links/review`, {
+          data: { movieId, linkId, userEmail: currentUser.email },
+        });
+
+        Swal.fire("Deleted!", "Your review has been deleted", "success");
+
+        setTimeout(() => fetchMovieLinks(movieId), 500);
+      } else if (result.isConfirmed) {
+        Swal.fire("Success!", "Review updated successfully", "success");
+      }
+
+      fetchMovieLinks(movieId);
+    });
+  } catch (error) {
+    Swal.fire("Error", error.message || "Failed to submit review", "error");
   }
 }
 
 // Add page change handler
 window.changeLinksPage = (newPage) => {
   currentLinksPage = newPage;
-  fetchMovieLinks(urlParams.get("movieId"));
+  fetchMovieLinks(movieId);
 };
 
 // Update addFavorite function to reset to first page
@@ -184,6 +273,7 @@ async function addFavorite(movie) {
     }
   };
 }
+
 // Fetch YouTube trailer
 async function fetchTrailer(title) {
   try {
