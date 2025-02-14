@@ -1,111 +1,161 @@
-# IMDb Clone Website
+# Movie Link Platform
 
-## Overview
-This project is a web-based application designed to mimic IMDb functionalities. It allows users to register, log in, search for movies, view detailed information about movies, and save their favorite movies. It is built using modern web development technologies and showcases an understanding of full-stack web development principles.
+## Key Features
 
-## Features
-1. **Main Page**:
-   - Displays a welcome message with placeholder student IDs.
-   - Provides options to "Register" or "Login".
+### Secure User Authentication:
 
-2. **User Registration**:
-   - Allows new users to create an account by providing their name, email, and password.
-   - Ensures passwords are confirmed before submission.
+- Password encryption using bcrypt
+- Session-based authentication
+- Registration with email validation
+- Login error handling
 
-3. **User Login**:
-   - Allows registered users to log in using their email and password.
-   - Redirects users to the movie search page upon successful authentication.
+### Movie Database Integration:
 
-4. **Movie Search**:
-   - Users can search for movies by entering a query.
-   - Pagination support to display a specified number of movies per page.
-   - Displays movie posters, titles, release years, and a "View Details" button for each movie.
+- Search movies by title
+- View detailed movie information
+- Save favorite movies
 
-5. **Movie Details**:
-   - Displays detailed information about the selected movie, including:
-     - Title
-     - Release Date
-     - Genre
-     - Director
-     - Cast
-     - Plot Summary
-     - IMDb Rating
-     - Trailer
-   - Allows users to add the movie to their favorites.
+### Link Management System:
 
-6. **Favorites**:
-   - Lists all movies added to the user's favorites.
-   - Provides an option to remove movies from the favorites list.
+- Users can submit streaming links for movies
+- Public/private link visibility controls
+- User-specific link management page
+- Link reviews and ratings system
+
+### Admin Dashboard:
+
+- Special admin login: **admin@gmail.com / Admin123**
+- View all public links sorted by popularity
+- Delete inappropriate links
+- Monitor user activity
+
+### Enhanced Security:
+
+- Session management with express-session
+- Protected admin routes
+- Client-side input validation
+- Secure password storage
 
 ## Technologies Used
-- **Frontend**: HTML, CSS, JavaScript
-- **Backend**: Node.js, Express.js
-- **Database**: JSON file (users.json to store users data)
-- **API**: OMDB API
 
-## Installation and Setup
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/jalaafarhat/IMDB-clone-website.git
-   ```
+- **Frontend:** HTML5, CSS3, JavaScript (ES6+)
+- **Backend:** Node.js, Express.js
+- **Database:** MongoDB with Mongoose ODM
+- **Authentication:** bcrypt, express-session
+- **APIs:** OMDB API
+- **Styling:** Bootstrap 5
+- **Notifications:** SweetAlert2
 
-2. **Navigate to the Project Directory**:
-   ```bash
-   cd IMDB-clone-website
-   ```
+## Installation & Setup
 
-3. **Install Dependencies**:
-   ```bash
-   npm install
-   ```
+### Prerequisites:
 
-4. **Set Up Environment Variables**:
-   - Create a `.env` file in the root directory.
-   - Add the following variables:
-     ```env
-     PORT=3000
-     API_KEY=your_omdb_api_key
-     ```
+- Node.js (v14+)
+- MongoDB Atlas account or local MongoDB installation
+- OMDB API key
 
-5. **Run the Server**:
-   ```bash
-   npm start
-   ```
-   - The application will be accessible at `http://localhost:3000`.
+### Configuration:
 
-## How to Use
-1. Open the application in a web browser.
-2. Register as a new user or log in with existing credentials.
-3. Use the search bar to find movies.
-4. Click on "View Details" to see more information about a movie.
-5. Add movies to your favorites list and view them in the "Favorites" section.
+```bash
+# Clone the repository
+git clone https://github.com/jalaafarhat/IMDB-clone-website.git
+cd IMDB-clone-website
+npm install
+```
 
+### Environment Setup:
+
+Create `.env` file with:
+
+```env
+PORT=3000
+MONGO_URI=mongodb_connection_string
+API_KEY=omdb_api_key
+SESSION_SECRET=session_secret
+```
+
+### Database Setup:
+
+```bash
+# Create admin user (first run only)
+node createAdmin.js
+```
+
+### Running:
+
+```bash
+npm start
+```
+
+Access at: [http://localhost:3000](http://localhost:3000)
+
+## Usage Guide
+
+### User Accounts:
+
+- Register with valid email and password (min 6 chars, at least one capital letter)
+- Login to access personalized features
+
+### Movie Features:
+
+- Search movies using title keywords
+- Save favorites for quick access
+- Submit streaming links for movies
+
+### Link Management:
+
+- Set links as public/private
+- View personal link statistics
+- Rate and review public links
+
+### Admin Access:
+
+- Login with **admin@gmail.com / Admin123**
+- Monitor and manage public links
+- Remove inappropriate content
+
+## Security Features
+
+- Password hashing with bcrypt (10 rounds)
+- Session cookie hardening:
+
+```javascript
+cookie: {
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  httpOnly: true,
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}
+```
+
+- CSRF protection for form submissions
+- Rate limiting on authentication endpoints
+- Input sanitization for all user-generated content
 
 ## Screenshots
-1. **Main Page**:
-  ![Screenshot (322)](https://github.com/user-attachments/assets/c4a39173-e3f5-490b-ac00-8d7f015ff036)
 
-2. **Registration Page**:
-   ![Screenshot (323)](https://github.com/user-attachments/assets/6f889cd7-21b8-4752-864e-e5c02585e862)
+### Admin Dashboard:
 
-3. **Login Page**:
-   ![Screenshot (324)](https://github.com/user-attachments/assets/5f9314ed-331a-4590-bdf7-273c0a52b6b9)
+![Admin Dashboard](Admin_Dashboard.png)
 
-4. **Movie Search Page**:
-  ![Screenshot (325)](https://github.com/user-attachments/assets/1bd6af2c-eede-458e-a381-489e95be1425)
-   
-5. **Movie Details Page**:
-   ![Screenshot (326)](https://github.com/user-attachments/assets/ecc078d1-36dd-4a79-b2e9-6e39dd2de7fe)
+### Link Management:
 
-6. **Add to Favorites Modal**:
-   ![Screenshot (327)](https://github.com/user-attachments/assets/5ddfe771-4117-4f27-a7a1-23a152bed692)
+![Link Management](Link_Management.png)
 
-7. **Favorites Page**:
-   ![Screenshot (329)](https://github.com/user-attachments/assets/5258f228-4f03-471c-a291-252e7aa564e2)
+### User Profile:
+
+![User Profile](User_Profile.png)
+
+### Public Links Browser:
+
+![Public Links](Public_Links.png)
 
 ## License
-This project is licensed under the MIT License. See the LICENSE file for details.
 
-## Author
-[Jalaa Farhat](https://github.com/jalaafarhat)
+MIT License - See LICENSE for details
 
+## Developer
+
+**Jalaa Farhat**  
+[GitHub Profile](https://github.com/jalaafarhat)  
+[Project Repository](https://github.com/jalaafarhat/IMDB-clone-website)

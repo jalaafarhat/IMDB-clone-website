@@ -38,7 +38,7 @@ async function loadAdminLinks() {
     });
   }
 }
-
+//display the links
 function displayLinks(links) {
   const container = document.getElementById("linksContainer");
   const noLinksMessage = document.getElementById("noLinksMessage");
@@ -81,7 +81,7 @@ function displayLinks(links) {
     });
   });
 }
-
+//delete link
 async function deleteLink(linkId) {
   const result = await Swal.fire({
     title: "Are you sure?",
@@ -131,7 +131,7 @@ async function deleteLink(linkId) {
     });
   }
 }
-
+//check empty state
 function checkEmptyState() {
   const hasLinks = document.querySelectorAll("[data-link-id]").length > 0;
   document.getElementById("noLinksMessage").style.display = hasLinks

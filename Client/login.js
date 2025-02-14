@@ -47,7 +47,7 @@ function loginUser() {
       alert("An error occurred during login. Please try again.");
     });
 }
-
+//display error message
 function displayError(message) {
   const formContent = document.querySelector(".form-content");
   const error = document.createElement("p");

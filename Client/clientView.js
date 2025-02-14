@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchUserLinks();
 });
 
+// Fetch user's links from the server and display them on the page
 async function fetchUserLinks() {
   try {
     const { data } = await axios.get(`/users/${currentUser.email}/links`);
@@ -20,7 +21,7 @@ async function fetchUserLinks() {
     Swal.fire("Error", "Failed to load links", "error");
   }
 }
-
+//sort links by rating,date,name
 function sortLinks(criteria) {
   const sortedLinks = [...allLinks].sort((a, b) => {
     switch (criteria) {
@@ -36,7 +37,7 @@ function sortLinks(criteria) {
   });
   displayLinks(sortedLinks);
 }
-
+//Display links
 function displayLinks(links) {
   const container = document.getElementById("linksContainer");
   const noLinksMessage = document.getElementById("noLinksMessage");

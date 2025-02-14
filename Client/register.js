@@ -63,7 +63,7 @@ function registerUser() {
       displayError(nameInput, "An error occurred. Please try again later.");
     });
 }
-
+//display error message
 function displayError(inputElement, message) {
   const error = document.createElement("p");
   error.textContent = message;
@@ -74,7 +74,7 @@ function displayError(inputElement, message) {
 
   inputElement.parentElement.appendChild(error);
 }
-
+//clear errors
 function clearErrors() {
   const errors = document.querySelectorAll(".errorMessage");
   errors.forEach((error) => error.remove());
