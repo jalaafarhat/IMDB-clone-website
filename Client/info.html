@@ -109,6 +109,72 @@
       .pagination .page-link:hover {
         color: rgb(0, 0, 0);
       }
+      /* Modal Styling */
+      .modal-content {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .modal-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        background: linear-gradient(to right, #141e30, #243b55);
+        color: white;
+      }
+
+      .modal-title {
+        font-weight: bold;
+      }
+
+      .modal-body {
+        padding: 20px;
+      }
+
+      .form-label {
+        color: white !important;
+      }
+
+      .form-control {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+      }
+
+      .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .form-check-label {
+        color: white;
+      }
+
+      .modal-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        background: linear-gradient(to right, #141e30, #243b55);
+      }
+
+      .btn-primary {
+        background-color: #17a2b8;
+        border: none;
+        transition: 0.3s;
+      }
+
+      .btn-primary:hover {
+        background-color: #138496;
+      }
+
+      .btn-secondary {
+        background-color: rgba(255, 255, 255, 0.3);
+        border: none;
+        transition: 0.3s;
+      }
+
+      .btn-secondary:hover {
+        background-color: rgba(255, 255, 255, 0.5);
+      }
     </style>
   </head>
   <body>
@@ -181,38 +247,24 @@
             ></button>
           </div>
           <div class="modal-body">
-            <form>
-              <div class="mb-3">
-                <label for="linkName" class="form-label" style="color: black"
-                  >Link Name</label
-                >
-                <input
-                  type="text"
-                  class="form-control"
-                  id="linkName"
-                  required
-                />
-              </div>
-              <div class="mb-3">
-                <label for="linkUrl" class="form-label" style="color: black"
-                  >Link URL</label
-                >
-                <input type="url" class="form-control" id="linkUrl" required />
-              </div>
-              <div class="mb-3 form-check">
-                <input
-                  type="checkbox"
-                  class="form-check-input"
-                  id="linkVisibility"
-                />
-                <label
-                  class="form-check-label"
-                  for="linkVisibility"
-                  style="color: black"
-                  >Public</label
-                >
-              </div>
-            </form>
+            <div class="mb-3">
+              <label for="linkName" class="form-label">Link Name</label>
+              <input type="text" class="form-control" id="linkName" required />
+            </div>
+            <div class="mb-3">
+              <label for="linkUrl" class="form-label">Link URL</label>
+              <input type="url" class="form-control" id="linkUrl" required />
+            </div>
+            <div class="mb-3 form-check">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                id="linkVisibility"
+              />
+              <label class="form-check-label" for="linkVisibility"
+                >Public</label
+              >
+            </div>
           </div>
           <div class="modal-footer">
             <button

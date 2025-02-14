@@ -67,7 +67,7 @@ async function fetchMovieDetails() {
     updateFavoriteButton(movieData);
   } catch (error) {
     console.error("Error loading movie:", error);
-    alert(error.message || "Failed to load movie details");
+    swal.fire(error.message || "Failed to load movie details");
   }
 }
 
@@ -83,8 +83,15 @@ async function fetchMovieLinks(movieId) {
 
     linksList.innerHTML = "";
     pagination.innerHTML = "";
+    // Add null check and default values
+    const publicLinks =
+      data.links?.map((link) => ({
+        name: link.name || "Unnamed Link",
+        link: link.link || "#",
+        addedBy: link.addedBy || "Anonymous",
+        isPublic: link.isPublic,
+      })) || [];
 
-    const publicLinks = data.links;
     const totalPages = Math.ceil(publicLinks.length / linksPerPage);
     const startIndex = (currentLinksPage - 1) * linksPerPage;
     const endIndex = startIndex + linksPerPage;
@@ -151,6 +158,7 @@ async function addFavorite(movie) {
         throw new Error("Please fill in both link name and URL");
       }
 
+      // Save to database
       await axios.post("/movies/links", {
         movieId: movie.imdbID,
         link: linkUrl,
@@ -159,7 +167,6 @@ async function addFavorite(movie) {
         addedBy: currentUser.email,
       });
 
-      // Reset to first page after adding new link
       currentLinksPage = 1;
       await fetchMovieLinks(movie.imdbID);
 
@@ -170,42 +177,6 @@ async function addFavorite(movie) {
     }
   };
 }
-
-// Update the addFavorite function to reset to first page after adding
-async function addFavorite(movie) {
-  const modal = new bootstrap.Modal(document.getElementById("linksModal"));
-  modal.show();
-
-  document.getElementById("submitLinks").onclick = async () => {
-    try {
-      const linkName = document.getElementById("linkName").value.trim();
-      const linkUrl = document.getElementById("linkUrl").value.trim();
-      const isPublic = document.getElementById("linkVisibility").checked;
-
-      if (!linkName || !linkUrl) {
-        throw new Error("Please fill in both link name and URL");
-      }
-
-      // Save to database
-      await axios.post("/movies/links", {
-        movieId: movie.imdbID,
-        link: linkUrl,
-        name: linkName,
-        isPublic,
-        addedBy: currentUser.email,
-      });
-
-      // Refresh links display
-      await fetchMovieLinks(movie.imdbID);
-
-      Swal.fire("Success!", "Link added successfully", "success");
-      modal.hide();
-    } catch (error) {
-      Swal.fire("Error!", error.message, "error");
-    }
-  };
-}
-
 // Fetch YouTube trailer
 async function fetchTrailer(title) {
   try {

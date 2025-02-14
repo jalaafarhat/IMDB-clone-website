@@ -71,9 +71,11 @@ const movieSchema = new mongoose.Schema({
   plot: String,
   links: [
     {
-      link: String,
+      link: { type: String, required: true },
+      name: { type: String, required: true },
       isPublic: { type: Boolean, default: false },
-      addedBy: String,
+      addedBy: { type: String, required: true },
+      addedAt: { type: Date, default: Date.now },
     },
   ],
 });
@@ -276,11 +278,25 @@ app.post("/movies", async (req, res) => {
 app.post("/movies/links", async (req, res) => {
   try {
     const { movieId, link, name, isPublic, addedBy } = req.body;
-
+    if (!movieId || !link || !name || !addedBy) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
+    }
     // Update movie links
     const movie = await Movie.findOneAndUpdate(
       { imdbID: movieId },
-      { $push: { links: { link, name, isPublic, addedBy } } },
+      {
+        $push: {
+          links: {
+            link: link,
+            name: name,
+            isPublic: isPublic,
+            addedBy: addedBy,
+          },
+        },
+      },
       { new: true, upsert: true }
     );
 
