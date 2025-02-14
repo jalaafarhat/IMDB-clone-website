@@ -30,10 +30,16 @@ function loginUser() {
         // Save the current user to localStorage
         localStorage.setItem("currentUser", JSON.stringify({ email: email }));
         alert("Login successful!");
-        // Redirect to the search page
-        window.location.href = "./search.html";
+
+        // Use the redirect URL from the server response
+        if (data.redirect) {
+          window.location.href = data.redirect; // This is the critical change
+        } else {
+          // Fallback for regular users
+          window.location.href = "./search.html";
+        }
       } else {
-        alert(data.message); // Display the error message from the backend
+        alert(data.message);
       }
     })
     .catch((error) => {

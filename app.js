@@ -31,6 +31,7 @@ mongoose
   .catch((err) => console.log("MongoDB connection error:", err));
 
 // Define Mongoose Schemas
+//userschema
 const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
@@ -45,7 +46,7 @@ const userSchema = new mongoose.Schema({
     },
   ],
 });
-
+//favorites schema
 const favoriteSchema = new mongoose.Schema({
   email: { type: String, required: true },
   movies: [
@@ -58,7 +59,7 @@ const favoriteSchema = new mongoose.Schema({
     },
   ],
 });
-
+//movies schema
 const movieSchema = new mongoose.Schema({
   imdbID: { type: String, unique: true, required: true },
   title: { type: String, required: true },
@@ -144,15 +145,34 @@ app.post("/login", async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+
+    if (!user) {
       return res
         .status(401)
         .json({ success: false, message: "Invalid email or password" });
     }
 
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid email or password" });
+    }
+
+    // Admin login
+    if (email === "admin@gmail.com" && isPasswordValid) {
+      req.session.user = user;
+      return res.json({
+        success: true,
+        redirect: "/admin.html",
+      });
+    }
+
+    // Regular user
     req.session.user = { name: user.name, email: user.email };
     res.json({ success: true, user: { name: user.name, email: user.email } });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
@@ -351,7 +371,7 @@ app.get("/movies/:movieId/links/:linkId/reviews", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
+//adding review for user
 app.post("/movies/links/review", async (req, res) => {
   try {
     const { movieId, linkId, userEmail, rating } = req.body;
@@ -386,7 +406,7 @@ app.post("/movies/links/review", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
+//delete reviews for user
 app.delete("/movies/links/review", async (req, res) => {
   try {
     const { movieId, linkId, userEmail } = req.body;
@@ -406,7 +426,7 @@ app.delete("/movies/links/review", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
+//delete links for user
 app.delete("/movies/links/:linkId", async (req, res) => {
   try {
     const movie = await Movie.findOne({ "links._id": req.params.linkId });
@@ -495,6 +515,78 @@ app.get("/users/:email/links", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
+// Admin routes
+app.get("/admin/links", async (req, res) => {
+  try {
+    // Verify admin user
+    if (!req.session.user || req.session.user.email !== "admin@gmail.com") {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    const movies = await Movie.find({ "links.isPublic": true })
+      .populate("links")
+      .exec();
+
+    const links = [];
+    movies.forEach((movie) => {
+      movie.links
+        .filter((link) => link.isPublic)
+        .forEach((link) => {
+          links.push({
+            _id: link._id,
+            name: link.name,
+            movieTitle: movie.title,
+            addedBy: link.addedBy,
+            reviews: link.reviews,
+            link: link.link,
+          });
+        });
+    });
+
+    // Sort by number of reviews descending
+    links.sort((a, b) => b.reviews.length - a.reviews.length);
+
+    res.json({ success: true, links });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+//delete links for admin
+app.delete("/admin/links/:linkId", async (req, res) => {
+  try {
+    // 1. Verify admin user
+    if (!req.session.user || req.session.user.email !== "admin@gmail.com") {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized: Admin privileges required",
+      });
+    }
+
+    // 2. Find the movie containing the link
+    const movie = await Movie.findOne({ "links._id": req.params.linkId });
+    if (!movie) {
+      return res.status(404).json({
+        success: false,
+        message: "Link not found",
+      });
+    }
+
+    // 3. Remove the link
+    movie.links.pull(req.params.linkId); // Uses Mongoose pull method
+    await movie.save();
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Admin link deletion error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error during deletion",
+    });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
