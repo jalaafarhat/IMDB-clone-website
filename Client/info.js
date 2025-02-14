@@ -88,14 +88,16 @@ async function fetchMovieLinks(movieId) {
     pagination.innerHTML = "";
 
     const publicLinks =
-      data.links?.map((link) => ({
-        _id: link._id,
-        name: link.name || "Unnamed Link",
-        link: link.link || "#",
-        addedBy: link.addedBy || "Anonymous",
-        isPublic: link.isPublic,
-        reviews: link.reviews || [],
-      })) || [];
+      data.links
+        ?.map((link) => ({
+          _id: link._id,
+          name: link.name || "Unnamed Link",
+          link: link.link || "#",
+          addedBy: link.addedBy || "Anonymous",
+          isPublic: link.isPublic,
+          reviews: link.reviews || [],
+        }))
+        .reverse() || [];
 
     const totalPages = Math.ceil(publicLinks.length / linksPerPage);
     const startIndex = (currentLinksPage - 1) * linksPerPage;
@@ -132,6 +134,15 @@ async function fetchMovieLinks(movieId) {
                 : "Review"
             }
           </button>
+          ${
+            link.addedBy === currentUser.email
+              ? `
+            <button class="btn btn-sm btn-danger me-2" onclick="deleteLink('${link._id}')">
+              Delete
+            </button>
+          `
+              : ""
+          }
         </div>
       `;
       linksList.appendChild(listItem);
@@ -240,8 +251,27 @@ window.changeLinksPage = (newPage) => {
 };
 
 // Update addFavorite function to reset to first page
-async function addFavorite(movie) {
+async function addFavoriteWithLink(movie) {
   const modal = new bootstrap.Modal(document.getElementById("linksModal"));
+
+  // First add to favorites
+  try {
+    await axios.post("/favorites", {
+      email: currentUser.email,
+      movie: {
+        imdbID: movie.imdbID,
+        title: movie.Title,
+        releaseDate: movie.Released,
+        poster: movie.Poster,
+        rating: movie.imdbRating,
+      },
+    });
+  } catch (error) {
+    Swal.fire("Error!", "Failed to add to favorites", "error");
+    return;
+  }
+
+  // Then show link modal
   modal.show();
 
   document.getElementById("submitLinks").onclick = async () => {
@@ -254,7 +284,7 @@ async function addFavorite(movie) {
         throw new Error("Please fill in both link name and URL");
       }
 
-      // Save to database
+      // Add the link
       await axios.post("/movies/links", {
         movieId: movie.imdbID,
         link: linkUrl,
@@ -263,10 +293,12 @@ async function addFavorite(movie) {
         addedBy: currentUser.email,
       });
 
+      // Refresh displays
       currentLinksPage = 1;
       await fetchMovieLinks(movie.imdbID);
+      updateFavoriteButton(movie);
 
-      Swal.fire("Success!", "Link added successfully", "success");
+      Swal.fire("Success!", "Added to favorites and link created", "success");
       modal.hide();
     } catch (error) {
       Swal.fire("Error!", error.message, "error");
@@ -298,36 +330,74 @@ async function fetchTrailer(title) {
 // Update favorite button state
 function updateFavoriteButton(movie) {
   const favoriteButton = document.getElementById("favoriteButton");
+
+  // First check favorite status
   axios
     .get(`/favorites?email=${encodeURIComponent(currentUser.email)}`)
     .then(({ data }) => {
       const isFavorite = data.favorites?.some((f) => f.imdbID === movie.imdbID);
+
+      // Update button text
       favoriteButton.textContent = isFavorite
         ? "Remove from Favorites"
-        : "Add to Favorites";
-      favoriteButton.onclick = () =>
-        isFavorite ? removeFavorite(movie) : addFavorite(movie);
+        : "Add to Favorites + Link";
+
+      // Set click handler
+      favoriteButton.onclick = () => {
+        if (isFavorite) {
+          removeFavorite(movie);
+        } else {
+          addFavoriteWithLink(movie);
+        }
+      };
     })
     .catch((error) => console.error("Error checking favorites:", error));
 }
 
 // Remove from favorites
-function removeFavorite(movie) {
-  axios
-    .delete("/favorites", {
+async function removeFavorite(movie) {
+  try {
+    await axios.delete("/favorites", {
       data: { email: currentUser.email, imdbID: movie.imdbID },
-    })
-    .then(() => {
-      Swal.fire("Removed!", "Removed from favorites", "success");
-      updateFavoriteButton(movie);
-    })
-    .catch((error) => {
-      Swal.fire(
-        "Error!",
-        error.response?.data?.message || error.message,
-        "error"
-      );
     });
+
+    Swal.fire("Removed!", "Removed from favorites", "success");
+    updateFavoriteButton(movie);
+  } catch (error) {
+    Swal.fire(
+      "Error!",
+      error.response?.data?.message || error.message,
+      "error"
+    );
+  }
+}
+
+// Add this delete link function
+async function deleteLink(linkId) {
+  try {
+    const { isConfirmed } = await Swal.fire({
+      title: "Delete Link?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Delete",
+    });
+
+    if (isConfirmed) {
+      await axios.delete(`/movies/links/${linkId}`, {
+        data: { userEmail: currentUser.email },
+      });
+      await fetchMovieLinks(movieId);
+      Swal.fire("Deleted!", "Link has been deleted.", "success");
+    }
+  } catch (error) {
+    Swal.fire(
+      "Error",
+      error.response?.data?.message || "Delete failed",
+      "error"
+    );
+  }
 }
 
 // Logout

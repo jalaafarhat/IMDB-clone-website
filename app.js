@@ -407,6 +407,60 @@ app.delete("/movies/links/review", async (req, res) => {
   }
 });
 
+app.delete("/movies/links/:linkId", async (req, res) => {
+  try {
+    const movie = await Movie.findOne({ "links._id": req.params.linkId });
+    if (!movie) return res.status(404).json({ message: "Link not found" });
+
+    const link = movie.links.id(req.params.linkId);
+    if (link.addedBy !== req.body.userEmail) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    movie.links.pull(req.params.linkId);
+    await movie.save();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Update existing link
+app.put("/movies/links/:linkId", async (req, res) => {
+  try {
+    const movie = await Movie.findOne({ "links._id": req.params.linkId });
+    if (!movie) return res.status(404).json({ message: "Link not found" });
+
+    const link = movie.links.id(req.params.linkId);
+    if (link.addedBy !== req.body.userEmail) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    link.set({
+      name: req.body.name,
+      link: req.body.link,
+      isPublic: req.body.isPublic,
+    });
+
+    await movie.save();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Delete all links for a user/movie
+app.delete("/movies/links/all", async (req, res) => {
+  try {
+    await Movie.updateMany(
+      { imdbID: req.body.movieId },
+      { $pull: { links: { addedBy: req.body.userEmail } } }
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
